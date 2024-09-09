@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@hookform/resolvers": "^3.9.0",
     "@mui/material": "^6.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
