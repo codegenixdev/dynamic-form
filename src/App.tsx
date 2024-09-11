@@ -1,53 +1,24 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Checkbox, Stack, TextField } from "@mui/material";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+import {
+  Button,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  IconButton,
+  Radio,
+  RadioGroup,
+  TextField,
+} from "@mui/material";
 import { useEffect } from "react";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
-
-const isEmployedBeforeSchema = z.discriminatedUnion("isEmployedBefore", [
-  z.object({ isEmployedBefore: z.literal(true), company: z.string() }),
-  z.object({ isEmployedBefore: z.literal(false) }),
-]);
-
-const educationLevelSchema = z.discriminatedUnion("educationLevelSchema", [
-  z.object({
-    educationLevelSchema: z.literal("noEducation"),
-  }),
-  z.object({
-    educationLevelSchema: z.literal("highSchool"),
-    highSchoolName: z.string(),
-  }),
-  z.object({
-    educationLevelSchema: z.literal("ba"),
-    universityName: z.string(),
-  }),
-]);
-
-const knowAnyLanguagesSchema = z.discriminatedUnion("knowAnyLanguages", [
-  z.object({
-    knowAnyLanguages: z.literal(true),
-    languages: z.array(
-      z.object({
-        name: z.string(),
-      })
-    ),
-  }),
-  z.object({ knowAnyLanguages: z.literal(false) }),
-]);
-
-const formSchema = z
-  .object({
-    fullName: z.string(),
-    age: z.string(),
-  })
-  .and(isEmployedBeforeSchema)
-  .and(educationLevelSchema)
-  .and(knowAnyLanguagesSchema);
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { Container } from "./Container";
+import { FormSchema, formSchema } from "./formSchema";
 
 function App() {
-  const { register, getValues, watch, control } = useForm<
-    z.infer<typeof formSchema>
-  >({
+  const { register, getValues, watch, control } = useForm<FormSchema>({
     mode: "all",
     resolver: zodResolver(formSchema),
   });
@@ -64,9 +35,11 @@ function App() {
     name: "languages",
   });
 
+  const educationLevel = useWatch({ control, name: "educationLevelSchema" });
+
   useEffect(() => {
     if (knowAnyLanguages) {
-      replaceLanguages([{ name: "foo" }]);
+      replaceLanguages([{ name: "" }]);
     }
   }, [knowAnyLanguages, replaceLanguages]);
 
@@ -76,16 +49,25 @@ function App() {
     });
     return sub.unsubscribe;
   }, [watch]);
+  now add form context and fields controllers
 
   return (
-    <>
+    <Container>
       <TextField {...register("fullName")} label="Full Name" />
-      <TextField {...register("age")} label="Age" />
-      <Checkbox {...register("isEmployedBefore")} />
+      <FormControlLabel
+        {...register("isEmployedBefore")}
+        label="Employed before?"
+        control={<Checkbox />}
+      />
       {isEmployedBefore && (
         <TextField {...register("company")} label="Company" />
       )}
-      <Checkbox {...register("knowAnyLanguages")} />
+      <FormControlLabel
+        {...register("knowAnyLanguages")}
+        label="Know Any Languages?"
+        control={<Checkbox />}
+      />
+
       {knowAnyLanguages && (
         <>
           {languagesFields.map((field, index) => (
@@ -94,28 +76,53 @@ function App() {
                 {...register(`languages.${index}.name`)}
                 key={field.id}
               />
-              <Button
-                onClick={() => {
-                  removeLanguages(index);
-                }}
-              >
-                Delete
-              </Button>
+              <IconButton onClick={() => removeLanguages(index)} color="error">
+                <DeleteForeverRoundedIcon />
+              </IconButton>
             </div>
           ))}
-          <Button
-            onClick={() => {
-              appendLanguages({ name: "" });
-            }}
+          <IconButton
+            onClick={() => appendLanguages({ name: "" })}
+            color="success"
           >
-            Add
-          </Button>
+            <AddCircleRoundedIcon />
+          </IconButton>
         </>
       )}
 
-      <Button onClick={() => formSchema.parse(getValues())}>Parse</Button>
-      {add labels to checkboxes then make better names and add radio button education level}
-    </>
+      <FormControl>
+        <FormLabel>Education Level</FormLabel>
+        <Controller
+          control={control}
+          name="educationLevelSchema"
+          render={({ field }) => (
+            <RadioGroup {...field}>
+              <FormControlLabel
+                value="noEducation"
+                control={<Radio />}
+                label="No Education"
+              />
+              <FormControlLabel
+                value="highSchool"
+                control={<Radio />}
+                label="High School"
+              />
+              <FormControlLabel value="ba" control={<Radio />} label="BA" />
+            </RadioGroup>
+          )}
+        />
+      </FormControl>
+
+      {educationLevel === "highSchool" && (
+        <TextField {...register("highSchoolName")} label="High School Name" />
+      )}
+      {educationLevel === "ba" && (
+        <TextField {...register("universityName")} label="University Name" />
+      )}
+      <Button variant="contained" onClick={() => formSchema.parse(getValues())}>
+        Submit
+      </Button>
+    </Container>
   );
 }
 export { App };
