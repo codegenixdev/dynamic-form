@@ -13,18 +13,29 @@ import {
   TextField,
 } from "@mui/material";
 import { useEffect } from "react";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import {
+  Controller,
+  FieldErrors,
+  SubmitHandler,
+  useFieldArray,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import { Container } from "./Container";
-import { FormSchema, formSchema } from "./formSchema";
+import { formDefaultValues, FormSchema, formSchema } from "./formSchema";
 
 function App() {
-  const { register, getValues, watch, control } = useForm<FormSchema>({
+  const {
+    register,
+    control,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<FormSchema>({
     mode: "all",
     resolver: zodResolver(formSchema),
+    defaultValues: formDefaultValues,
   });
 
-  const isEmployedBefore = useWatch({ control, name: "isEmployedBefore" });
-  const knowAnyLanguages = useWatch({ control, name: "knowAnyLanguages" });
   const {
     fields: languagesFields,
     replace: replaceLanguages,
@@ -35,53 +46,80 @@ function App() {
     name: "languages",
   });
 
-  const educationLevel = useWatch({ control, name: "educationLevelSchema" });
+  const fullErrors: FieldErrors<
+    Extract<FormSchema, { hasWorkExperience: true }>
+  > &
+    FieldErrors<Extract<FormSchema, { educationLevel: "noFormalEducation" }>> &
+    FieldErrors<Extract<FormSchema, { educationLevel: "highSchoolDiploma" }>> &
+    FieldErrors<Extract<FormSchema, { educationLevel: "bachelorsDegree" }>> &
+    FieldErrors<Extract<FormSchema, { knowsOtherLanguages: true }>> = errors;
+
+  const hasWorkExperience = useWatch({ control, name: "hasWorkExperience" });
+  const knowsOtherLanguages = useWatch({
+    control,
+    name: "knowsOtherLanguages",
+  });
+  const educationLevel = useWatch({ control, name: "educationLevel" });
 
   useEffect(() => {
-    if (knowAnyLanguages) {
+    if (knowsOtherLanguages) {
       replaceLanguages([{ name: "" }]);
     }
-  }, [knowAnyLanguages, replaceLanguages]);
+  }, [knowsOtherLanguages, replaceLanguages]);
 
-  useEffect(() => {
-    const sub = watch((value) => {
-      console.log(value);
-    });
-    return sub.unsubscribe;
-  }, [watch]);
-  now add form context and fields controllers
+  const onSubmit: SubmitHandler<FormSchema> = (data) => {
+    alert(JSON.stringify(data, null, 2));
+  };
 
   return (
     <Container>
-      <TextField {...register("fullName")} label="Full Name" />
+      <TextField
+        {...register("fullName")}
+        label="Full Name"
+        helperText={fullErrors.fullName?.message}
+        error={!!fullErrors.fullName}
+      />
       <FormControlLabel
-        {...register("isEmployedBefore")}
-        label="Employed before?"
+        {...register("hasWorkExperience")}
+        label="Work Experience?"
         control={<Checkbox />}
       />
-      {isEmployedBefore && (
-        <TextField {...register("company")} label="Company" />
+      {hasWorkExperience && (
+        <TextField
+          {...register("companyName")}
+          label="Company Name"
+          helperText={fullErrors.companyName?.message}
+          error={!!fullErrors.companyName}
+        />
       )}
       <FormControlLabel
-        {...register("knowAnyLanguages")}
-        label="Know Any Languages?"
+        {...register("knowsOtherLanguages")}
+        label="Know Other Languages?"
         control={<Checkbox />}
       />
 
-      {knowAnyLanguages && (
+      {knowsOtherLanguages && (
         <>
           {languagesFields.map((field, index) => (
-            <div>
+            <div key={field.id}>
               <TextField
+                sx={{ width: "100%" }}
                 {...register(`languages.${index}.name`)}
-                key={field.id}
+                label="Language Name"
+                helperText={fullErrors.languages?.[index]?.name?.message}
+                error={!!fullErrors.languages?.[index]?.name?.message}
               />
-              <IconButton onClick={() => removeLanguages(index)} color="error">
+              <IconButton
+                disabled={languagesFields.length === 1}
+                onClick={() => removeLanguages(index)}
+                color="error"
+              >
                 <DeleteForeverRoundedIcon />
               </IconButton>
             </div>
           ))}
           <IconButton
+            sx={{ width: "fit-content" }}
             onClick={() => appendLanguages({ name: "" })}
             color="success"
           >
@@ -94,32 +132,46 @@ function App() {
         <FormLabel>Education Level</FormLabel>
         <Controller
           control={control}
-          name="educationLevelSchema"
+          name="educationLevel"
           render={({ field }) => (
             <RadioGroup {...field}>
               <FormControlLabel
-                value="noEducation"
+                value="noFormalEducation"
                 control={<Radio />}
-                label="No Education"
+                label="No Formal Education"
               />
               <FormControlLabel
-                value="highSchool"
+                value="highSchoolDiploma"
                 control={<Radio />}
-                label="High School"
+                label="High School Diploma"
               />
-              <FormControlLabel value="ba" control={<Radio />} label="BA" />
+              <FormControlLabel
+                value="bachelorsDegree"
+                control={<Radio />}
+                label="Bachelors Degree"
+              />
             </RadioGroup>
           )}
         />
       </FormControl>
 
-      {educationLevel === "highSchool" && (
-        <TextField {...register("highSchoolName")} label="High School Name" />
+      {educationLevel === "highSchoolDiploma" && (
+        <TextField
+          {...register("schoolName")}
+          label="High School Name"
+          helperText={fullErrors.schoolName?.message}
+          error={!!fullErrors.schoolName?.message}
+        />
       )}
-      {educationLevel === "ba" && (
-        <TextField {...register("universityName")} label="University Name" />
+      {educationLevel === "bachelorsDegree" && (
+        <TextField
+          {...register("universityName")}
+          label="University Name"
+          helperText={fullErrors.universityName?.message}
+          error={!!fullErrors.universityName?.message}
+        />
       )}
-      <Button variant="contained" onClick={() => formSchema.parse(getValues())}>
+      <Button variant="contained" onClick={handleSubmit(onSubmit)}>
         Submit
       </Button>
     </Container>
