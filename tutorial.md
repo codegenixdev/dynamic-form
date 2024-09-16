@@ -8,8 +8,6 @@ npm create vite@latest .
 npm i
 remove unnecessary also change app to named export and reimport it
 
-but before we continue liking and subscribing can really help my career on youtube. I really appreciate it
-
 install packages
 
 ```bash
@@ -28,7 +26,6 @@ show package.json
 >
   <CssBaseline />
 
-  <CssBaseline />
   <App />
 </ThemeProvider>
 ```
@@ -79,6 +76,8 @@ function App() {
 
 export { App };
 ```
+
+but before we continue liking and subscribing can really help my career on youtube. I really appreciate it
 
 ```typescript formSchema.ts
 import { z } from "zod";
@@ -132,7 +131,6 @@ export { App };
 ```
 
 show errors are working
-CTA
 
 now show full app and hasWorkExperience and its functionality
 we need to improve our schema to add this dynamic validation behavior
@@ -141,14 +139,12 @@ we need to improve our schema to add this dynamic validation behavior
 import { z } from "zod";
 
 const workExperienceSchema = z.discriminatedUnion("hasWorkExperience", [
-  // [!code ++]
   z.object({
-    // [!code ++]
-    hasWorkExperience: z.literal(true), // [!code ++]
-    companyName: z.string().min(1), // [!code ++]
-  }), // [!code ++]
-  z.object({ hasWorkExperience: z.literal(false) }), // [!code ++]
-]); // [!code ++]
+    hasWorkExperience: z.literal(true),
+    companyName: z.string().min(1),
+  }),
+  z.object({ hasWorkExperience: z.literal(false) }),
+]);
 
 const formSchema = z
   .object({
@@ -297,6 +293,8 @@ function App() {
 
 export { App };
 ```
+
+CTA
 
 now show knowsOtherLanguages checkbox from final app
 
