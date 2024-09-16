@@ -19,8 +19,18 @@ npm i @emotion/react @emotion/styled @mui/icons-material @mui/material react-hoo
 show package.json
 
 ```tsx main.tsx
-// above <App />
-<CssBaseline />
+<ThemeProvider
+  theme={createTheme({
+    palette: {
+      mode: "dark",
+    },
+  })}
+>
+  <CssBaseline />
+
+  <CssBaseline />
+  <App />
+</ThemeProvider>
 ```
 
 for better organization and not making the main part of the tutorial complex, we create a container to put our app inside it
